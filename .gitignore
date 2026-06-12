@@ -1,0 +1,24 @@
+# Секреты — токен amoCRM никогда не попадает в репозиторий
+.env
+.env.local
+.env.*.local
+
+# Зависимости
+node_modules/
+
+# Логи
+*.log
+npm-debug.log*
+
+# Отчёты тестов и покрытие
+coverage/
+.nyc_output/
+
+# Настройки редакторов
+.vscode/
+.idea/
+
+# Системный мусор
+Thumbs.db
+desktop.ini
+.DS_Store
