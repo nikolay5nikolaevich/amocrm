@@ -1,0 +1,18 @@
+# Render Blueprint — https://render.com/docs/blueprint-spec
+# Деплой: New + → Blueprint → выбрать этот репозиторий.
+# Render прочитает файл и создаст Web Service автоматически.
+services:
+  - type: web
+    name: dashboard-amocrm
+    runtime: node
+    plan: free            # бесплатный тариф «засыпает» после простоя; для продакшена — starter и выше
+    region: frankfurt     # ближе к amoCRM (RU/EU) → меньше задержка к API
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /    # отдаёт статичный index.html, не зависит от amoCRM
+    envVars:
+      - key: AMO_BASE_URL
+        sync: false       # значение вводится вручную в панели Render (секрет в репозиторий не попадает)
+      - key: AMO_ACCESS_TOKEN
+        sync: false
+      # PORT не указываем — Render задаёт его сам, код читает process.env.PORT
