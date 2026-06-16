@@ -179,8 +179,8 @@ async function main() {
   const loadDashboardData = await loadDashboardDataFactory(config);
   const server = createServer({ loadDashboardData });
 
-  server.listen(config.port, "127.0.0.1", () => {
-    console.log(`Dashboard is running at http://127.0.0.1:${config.port}`);
+  server.listen(config.port, "0.0.0.0", () => {
+    console.log(`Dashboard is running on port ${config.port}`);
   });
 }
 
