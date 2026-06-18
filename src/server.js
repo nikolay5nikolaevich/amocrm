@@ -117,7 +117,7 @@ function createServer({
   return http.createServer(async (request, response) => {
     const requestUrl = new URL(request.url, "http://127.0.0.1");
 
-    if (request.method === "POST" && requestUrl.pathname.startsWith("/webhook/")) {
+    if (requestUrl.pathname.startsWith("/webhook/")) {
       if (!webhookSecret || !handleWebhook) {
         sendJson(response, 404, { error: "Not found" });
         return;
@@ -126,6 +126,13 @@ function createServer({
       const token = decodeURIComponent(requestUrl.pathname.slice("/webhook/".length));
       if (!safeEqual(token, webhookSecret)) {
         sendJson(response, 403, { error: "Forbidden" });
+        return;
+      }
+
+      // amoCRM при сохранении хука проверяет URL запросом GET и ждёт 200. Сами события приходят
+      // POST-ом; на любой не-POST (GET/HEAD) просто отвечаем 200, иначе amoCRM считает адрес недоступным.
+      if (request.method !== "POST") {
+        sendJson(response, 200, { ok: true });
         return;
       }
 

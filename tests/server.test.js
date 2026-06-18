@@ -123,6 +123,28 @@ test("POST /webhook с верным секретом возвращает 200 и
   }
 });
 
+test("GET /webhook с верным секретом возвращает 200 (проверка URL amoCRM при сохранении)", async () => {
+  let called = false;
+  const server = createServer({
+    loadDashboardData: async () => ({}),
+    handleWebhook: async () => {
+      called = true;
+    },
+    webhookSecret: "s3cret"
+  });
+
+  await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
+
+  try {
+    const response = await request(server, "/webhook/s3cret");
+    assert.equal(response.statusCode, 200);
+    // GET — это только проверка доступности, обработчик событий дёргаться не должен.
+    assert.equal(called, false);
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+  }
+});
+
 test("POST /webhook с неверным секретом возвращает 403 и не вызывает handleWebhook", async () => {
   let called = false;
   const server = createServer({
