@@ -1,9 +1,27 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
 
-const { createStore } = require("../src/store");
+const { createStore, buildPoolConfig } = require("../src/store");
 
 const TEST_DATABASE_URL = process.env.TEST_DATABASE_URL;
+
+// Чистая функция — проверяется без подключения к БД.
+test("buildPoolConfig: Neon-строка → SSL включён, sslmode вычищен, прочие параметры целы", () => {
+  const cfg = buildPoolConfig(
+    "postgresql://u:p@ep-x-pooler.aws.neon.tech/db?sslmode=require&channel_binding=require"
+  );
+  assert.deepEqual(cfg.ssl, { rejectUnauthorized: false });
+  assert.equal(/sslmode=/i.test(cfg.connectionString), false);
+  assert.equal(/channel_binding=require/.test(cfg.connectionString), true);
+  assert.equal(cfg.connectionString.startsWith("postgresql://u:p@"), true);
+});
+
+test("buildPoolConfig: localhost → без SSL, строка не тронута", () => {
+  const cs = "postgres://postgres:dev@localhost:5432/dashboard";
+  const cfg = buildPoolConfig(cs);
+  assert.equal(cfg.ssl, false);
+  assert.equal(cfg.connectionString, cs);
+});
 
 // Тесты store идут против реальной Postgres. Без TEST_DATABASE_URL — пропускаем,
 // чтобы CI/локалка без БД не падали (см. ТЗ §4.7). Локально БД поднимается через Docker:

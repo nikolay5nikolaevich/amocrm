@@ -48,8 +48,11 @@ async function main() {
   const baseUrl = process.env.AMO_BASE_URL;
   const accessToken = process.env.AMO_ACCESS_TOKEN;
 
-  if (!baseUrl || !accessToken) {
-    throw new Error("Missing required environment variables: AMO_BASE_URL, AMO_ACCESS_TOKEN");
+  const missing = ["AMO_BASE_URL", "AMO_ACCESS_TOKEN", "DATABASE_URL"].filter(
+    (key) => !process.env[key]
+  );
+  if (missing.length > 0) {
+    throw new Error(`Missing required environment variables: ${missing.join(", ")}`);
   }
 
   const client = createAmoClient({ baseUrl, accessToken, requestDelayMs: 150 });

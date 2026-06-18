@@ -6,6 +6,7 @@
   "scripts": {
     "start": "node src/server.js",
     "backfill": "node src/backfill.js",
+    "db:check": "node src/db-check.js",
     "db:reset": "node src/db-reset.js",
     "test": "node --test"
   },

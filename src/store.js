@@ -1,5 +1,21 @@
 const { Pool } = require("pg");
 
+// Убирает только параметр sslmode из query-части строки, не трогая логин/пароль/хост.
+function stripSslmode(connectionString) {
+  const queryIndex = connectionString.indexOf("?");
+  if (queryIndex === -1) {
+    return connectionString;
+  }
+
+  const base = connectionString.slice(0, queryIndex);
+  const params = connectionString
+    .slice(queryIndex + 1)
+    .split("&")
+    .filter((part) => part && !/^sslmode=/i.test(part));
+
+  return params.length > 0 ? `${base}?${params.join("&")}` : base;
+}
+
 // Neon и большинство managed-Postgres требуют SSL, локальный Postgres (Docker) — нет.
 // Решаем по строке подключения: sslmode=require или нелокальный хост → SSL включён;
 // sslmode=disable или localhost → SSL выключен. Единый источник правды для store и db-reset.
@@ -14,7 +30,9 @@ function buildPoolConfig(connectionString) {
     ssl = { rejectUnauthorized: false };
   }
 
-  return { connectionString: cs, ssl, max: 5 };
+  // SSL задаётся явным объектом ssl выше, поэтому sslmode в строке лишний. Убираем его, иначе
+  // pg-connection-string печатает SECURITY WARNING про смену семантики sslmode в pg v9.
+  return { connectionString: ssl ? stripSslmode(cs) : cs, ssl, max: 5 };
 }
 
 // Схема создаётся при старте идемпотентно (CREATE TABLE IF NOT EXISTS),
