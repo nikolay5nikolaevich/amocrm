@@ -1,5 +1,7 @@
 function createAmoClient(config, fetchImpl = fetch) {
   const baseUrl = config.baseUrl.replace(/\/+$/, "");
+  // Пауза между запросами, чтобы не упереться в лимит amoCRM (~7 req/sec). По умолчанию 0.
+  const requestDelayMs = Number(config.requestDelayMs) || 0;
   const defaultHeaders = {
     Accept: "application/json",
     Authorization: `Bearer ${config.accessToken}`
@@ -19,7 +21,13 @@ function createAmoClient(config, fetchImpl = fetch) {
       throw new Error(`amoCRM API request failed: ${response.status} ${body}`.trim());
     }
 
-    return response.json();
+    const payload = await response.json();
+
+    if (requestDelayMs > 0) {
+      await new Promise((resolve) => setTimeout(resolve, requestDelayMs));
+    }
+
+    return payload;
   }
 
   async function fetchCollection(firstPath, itemKey) {
@@ -53,11 +61,21 @@ function createAmoClient(config, fetchImpl = fetch) {
     return payload?._embedded?.pipelines || [];
   }
 
+  async function fetchLeadById(id) {
+    return requestJson(`/api/v4/leads/${id}?with=contacts`);
+  }
+
+  async function fetchContactById(id) {
+    return requestJson(`/api/v4/contacts/${id}`);
+  }
+
   return {
     fetchAllLeads,
     fetchUsers,
     fetchContacts,
-    fetchPipelines
+    fetchPipelines,
+    fetchLeadById,
+    fetchContactById
   };
 }
 

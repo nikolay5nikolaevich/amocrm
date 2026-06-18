@@ -5,14 +5,21 @@ services:
   - type: web
     name: dashboard-amocrm
     runtime: node
-    plan: free            # бесплатный тариф «засыпает» после простоя; для продакшена — starter и выше
+    plan: free            # данные лежат во внешнем Postgres (Neon), постоянный диск не нужен,
+                          # поэтому хватает бесплатного плана; см. ТЗ §6 про keep-alive и реконсиляцию
     region: frankfurt     # ближе к amoCRM (RU/EU) → меньше задержка к API
     buildCommand: npm install
     startCommand: npm start
     healthCheckPath: /    # отдаёт статичный index.html, не зависит от amoCRM
     envVars:
+      - key: DATABASE_URL
+        sync: false       # строка подключения Neon (pooled, c sslmode=require); вводится в панели Render
       - key: AMO_BASE_URL
         sync: false       # значение вводится вручную в панели Render (секрет в репозиторий не попадает)
       - key: AMO_ACCESS_TOKEN
         sync: false
+      - key: AMO_WEBHOOK_SECRET
+        sync: false       # длинный случайный токен; используется в URL вебхука и /resync
+      - key: PIPELINE_ID
+        sync: false       # id воронки, которую зеркалим (пусто = все)
       # PORT не указываем — Render задаёт его сам, код читает process.env.PORT

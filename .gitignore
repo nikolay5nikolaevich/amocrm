@@ -6,6 +6,12 @@
 # Зависимости
 node_modules/
 
+# Локальная БД-зеркало (SQLite + WAL)
+data/
+*.db
+*.db-shm
+*.db-wal
+
 # Логи
 *.log
 npm-debug.log*
@@ -22,3 +28,22 @@ coverage/
 Thumbs.db
 desktop.ini
 .DS_Store
+
+# Рабочие заметки и ТЗ (не для репозитория)
+ТЗ-postgres.md
+
+# AI-ассистенты и их артефакты (Claude Code, Cursor, Copilot, Aider, Codex и др.)
+.claude/
+CLAUDE.md
+CLAUDE.local.md
+.claude.json
+.cursor/
+.cursorrules
+.cursorignore
+.aider*
+.continue/
+.windsurf/
+.codeium/
+GEMINI.md
+AGENTS.md
+.github/copilot-instructions.md

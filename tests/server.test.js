@@ -4,7 +4,7 @@ const http = require("node:http");
 
 const { createServer, validateConfig } = require("../src/server");
 
-function request(server, path) {
+function request(server, path, { method = "GET", body = null } = {}) {
   const address = server.address();
 
   return new Promise((resolve, reject) => {
@@ -13,25 +13,30 @@ function request(server, path) {
         host: "127.0.0.1",
         port: address.port,
         path,
-        method: "GET"
+        method
       },
       (res) => {
-        let body = "";
+        let responseBody = "";
         res.setEncoding("utf8");
         res.on("data", (chunk) => {
-          body += chunk;
+          responseBody += chunk;
         });
         res.on("end", () => {
           resolve({
             statusCode: res.statusCode,
             headers: res.headers,
-            body
+            body: responseBody
           });
         });
       }
     );
 
     req.on("error", reject);
+
+    if (body !== null) {
+      req.write(body);
+    }
+
     req.end();
   });
 }
@@ -89,6 +94,55 @@ test("createServer returns dashboard JSON for a valid request", async () => {
     const body = JSON.parse(response.body);
     assert.equal(body.summary.topUpTotal, 1000000);
     assert.equal(body.rows[0].managerName, "Матвей");
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+  }
+});
+
+test("POST /webhook с верным секретом возвращает 200 и вызывает handleWebhook", async () => {
+  const received = [];
+  const server = createServer({
+    loadDashboardData: async () => ({}),
+    handleWebhook: async (events) => received.push(...events),
+    webhookSecret: "s3cret"
+  });
+
+  await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
+
+  try {
+    const response = await request(server, "/webhook/s3cret", {
+      method: "POST",
+      body: "leads[status][0][id]=123"
+    });
+
+    assert.equal(response.statusCode, 200);
+    assert.equal(received.length, 1);
+    assert.deepEqual(received[0], { id: 123, event: "status" });
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+  }
+});
+
+test("POST /webhook с неверным секретом возвращает 403 и не вызывает handleWebhook", async () => {
+  let called = false;
+  const server = createServer({
+    loadDashboardData: async () => ({}),
+    handleWebhook: async () => {
+      called = true;
+    },
+    webhookSecret: "s3cret"
+  });
+
+  await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
+
+  try {
+    const response = await request(server, "/webhook/wrong", {
+      method: "POST",
+      body: "leads[status][0][id]=123"
+    });
+
+    assert.equal(response.statusCode, 403);
+    assert.equal(called, false);
   } finally {
     await new Promise((resolve) => server.close(resolve));
   }

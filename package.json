@@ -5,9 +5,14 @@
   "type": "commonjs",
   "scripts": {
     "start": "node src/server.js",
+    "backfill": "node src/backfill.js",
+    "db:reset": "node src/db-reset.js",
     "test": "node --test"
   },
   "engines": {
     "node": ">=18"
+  },
+  "dependencies": {
+    "pg": "^8.13.0"
   }
 }

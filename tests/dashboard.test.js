@@ -70,10 +70,10 @@ test("buildDashboardData groups valid deals by responsible manager and sums top-
     topUpTotal: 1000000
   });
 
-  assert.equal(result.rows.length, 1);
-  assert.equal(result.rows[0].managerName, "Матвей");
-  assert.equal(result.rows[0].dealCount, 2);
-  assert.equal(result.rows[0].topUpTotal, 1000000);
+  assert.equal(result.managerSummaries.length, 1);
+  assert.equal(result.managerSummaries[0].managerName, "Матвей");
+  assert.equal(result.managerSummaries[0].dealCount, 2);
+  assert.equal(result.managerSummaries[0].topUpTotal, 1000000);
 });
 
 test("buildDashboardData excludes deals outside the period or with non-positive top-up", () => {
@@ -109,5 +109,5 @@ test("buildDashboardData excludes deals outside the period or with non-positive 
   });
 
   assert.equal(result.summary.dealCount, 0);
-  assert.equal(result.rows.length, 0);
+  assert.equal(result.managerSummaries.length, 0);
 });
