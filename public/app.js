@@ -310,5 +310,81 @@ filtersForm.addEventListener("submit", async (event) => {
   await submitFilters();
 });
 
-setDefaultDates();
+function isAmoOrigin(origin) {
+  try {
+    const host = new URL(origin).hostname;
+    return host === "amocrm.ru" || host.endsWith(".amocrm.ru");
+  } catch (error) {
+    return false;
+  }
+}
+
+function readMessagePayload(data) {
+  if (data && typeof data === "object") {
+    return data;
+  }
+
+  if (typeof data === "string") {
+    try {
+      return JSON.parse(data);
+    } catch (error) {
+      return null;
+    }
+  }
+
+  return null;
+}
+
+// Привести payload postMessage к { from, to } через ту же логику, что и URL.
+function resolveExternalPeriod(payload) {
+  const data = readMessagePayload(payload);
+
+  if (!data || !window.AmoPeriod) {
+    return null;
+  }
+
+  const params = new URLSearchParams();
+  if (typeof data.from === "string") {
+    params.set("from", data.from);
+  }
+  if (typeof data.to === "string") {
+    params.set("to", data.to);
+  }
+  if (typeof data.period === "string") {
+    params.set("period", data.period);
+  }
+
+  return window.AmoPeriod.parsePeriodFromQuery(params.toString(), new Date());
+}
+
+// Стартовый период из URL самого iframe. Нет периода -> дефолтные даты (как раньше).
+function applyInitialPeriod() {
+  const resolved = window.AmoPeriod
+    ? window.AmoPeriod.parsePeriodFromQuery(window.location.search, new Date())
+    : null;
+
+  if (resolved) {
+    fromInput.value = resolved.from;
+    toInput.value = resolved.to;
+  } else {
+    setDefaultDates();
+  }
+}
+
+window.addEventListener("message", (event) => {
+  if (!isAmoOrigin(event.origin)) {
+    return;
+  }
+
+  const resolved = resolveExternalPeriod(event.data);
+  if (!resolved) {
+    return;
+  }
+
+  fromInput.value = resolved.from;
+  toInput.value = resolved.to;
+  void submitFilters();
+});
+
+applyInitialPeriod();
 void submitFilters();
