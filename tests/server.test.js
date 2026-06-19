@@ -169,3 +169,23 @@ test("POST /webhook с неверным секретом возвращает 40
     await new Promise((resolve) => server.close(resolve));
   }
 });
+
+test("GET /period.js отдаёт JS-модуль периода", async () => {
+  const server = createServer({
+    loadDashboardData: async () => ({})
+  });
+
+  await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
+
+  try {
+    const response = await request(server, "/period.js");
+    assert.equal(response.statusCode, 200);
+    assert.equal(
+      response.headers["content-type"],
+      "application/javascript; charset=utf-8"
+    );
+    assert.match(response.body, /resolveAmoPeriod/);
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+  }
+});

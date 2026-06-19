@@ -189,6 +189,11 @@ function createServer({
       return;
     }
 
+    if (request.method === "GET" && requestUrl.pathname === "/period.js") {
+      sendFile(response, path.join(publicDir, "period.js"), "application/javascript; charset=utf-8");
+      return;
+    }
+
     if (request.method === "GET" && requestUrl.pathname === "/api/dashboard") {
       const from = requestUrl.searchParams.get("from");
       const to = requestUrl.searchParams.get("to");
